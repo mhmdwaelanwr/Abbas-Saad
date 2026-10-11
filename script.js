@@ -77,7 +77,7 @@
       'error',
       () => {
         if (!heroImage.src.includes('/hqdefault.jpg')) {
-          heroImage.src = 'https://i.ytimg.com/vi/Y0rYvHu3W60/hqdefault.jpg';
+          heroImage.src = 'https://i.ytimg.com/vi/1TL-kex5aag/hqdefault.jpg';
         }
       },
       { once: true }
