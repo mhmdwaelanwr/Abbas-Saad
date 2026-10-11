@@ -3,9 +3,6 @@
   const menuButton = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.main-nav');
   const navLinks = [...document.querySelectorAll('.main-nav a[href^="#"]')];
-  const sections = navLinks
-    .map((link) => document.querySelector(link.getAttribute('href')))
-    .filter(Boolean);
 
   const closeMenu = () => {
     if (!menuButton || !nav) return;
@@ -17,14 +14,13 @@
 
   if (menuButton && nav) {
     menuButton.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('open');
-      body.classList.toggle('menu-open', isOpen);
-      menuButton.setAttribute('aria-expanded', String(isOpen));
-      menuButton.setAttribute('aria-label', isOpen ? 'إغلاق القائمة' : 'فتح القائمة');
+      const open = nav.classList.toggle('open');
+      body.classList.toggle('menu-open', open);
+      menuButton.setAttribute('aria-expanded', String(open));
+      menuButton.setAttribute('aria-label', open ? 'إغلاق القائمة' : 'فتح القائمة');
     });
 
     navLinks.forEach((link) => link.addEventListener('click', closeMenu));
-
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape') closeMenu();
     });
@@ -35,61 +31,85 @@
 
   const revealItems = document.querySelectorAll('.reveal');
   if ('IntersectionObserver' in window) {
-    const revealObserver = new IntersectionObserver(
-      (entries, observer) => {
+    const observer = new IntersectionObserver(
+      (entries, instance) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add('in-view');
-          observer.unobserve(entry.target);
+          instance.unobserve(entry.target);
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -30px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -24px 0px' }
     );
-
-    revealItems.forEach((item) => revealObserver.observe(item));
+    revealItems.forEach((item) => observer.observe(item));
   } else {
     revealItems.forEach((item) => item.classList.add('in-view'));
   }
 
+  const sections = navLinks
+    .map((link) => document.querySelector(link.getAttribute('href')))
+    .filter(Boolean);
+
   if ('IntersectionObserver' in window && sections.length) {
     const sectionObserver = new IntersectionObserver(
       (entries) => {
-        const visible = entries
+        const current = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-        if (!visible) return;
+        if (!current) return;
 
         navLinks.forEach((link) => {
-          const targetId = link.getAttribute('href').slice(1);
-          link.classList.toggle('active', targetId === visible.target.id);
+          link.classList.toggle('active', link.getAttribute('href') === `#${current.target.id}`);
         });
       },
-      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.15, 0.3] }
+      { rootMargin: '-38% 0px -52% 0px', threshold: [0, 0.15, 0.3] }
     );
-
     sections.forEach((section) => sectionObserver.observe(section));
   }
 
-  const heroImage = document.querySelector('.hero-photo img');
-  if (heroImage) {
-    heroImage.addEventListener(
-      'error',
-      () => {
-        if (!heroImage.src.includes('/hqdefault.jpg')) {
-          heroImage.src = 'https://i.ytimg.com/vi/1TL-kex5aag/hqdefault.jpg';
-        }
-      },
-      { once: true }
-    );
+  const copyButton = document.querySelector('.copy-bio');
+  const bio = document.querySelector('#media-bio');
+
+  if (copyButton && bio) {
+    copyButton.addEventListener('click', async () => {
+      const text = bio.textContent.trim();
+      const original = copyButton.textContent;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        copyButton.textContent = 'تم النسخ';
+      } catch (_) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        copyButton.textContent = 'تم النسخ';
+      }
+
+      window.setTimeout(() => {
+        copyButton.textContent = original;
+      }, 1800);
+    });
   }
 
-  document.querySelectorAll('.thumb img').forEach((image) => {
+  const printButton = document.querySelector('.print-profile');
+  if (printButton) {
+    printButton.addEventListener('click', () => window.print());
+  }
+
+  document.querySelectorAll('img[src*="i.ytimg.com"]').forEach((image) => {
     image.addEventListener(
       'error',
       () => {
         const match = image.src.match(/\/vi\/([^/]+)\//);
-        if (match) image.src = `https://i.ytimg.com/vi/${match[1]}/mqdefault.jpg`;
+        if (match && !image.src.includes('/mqdefault.jpg')) {
+          image.src = `https://i.ytimg.com/vi/${match[1]}/mqdefault.jpg`;
+        }
       },
       { once: true }
     );
