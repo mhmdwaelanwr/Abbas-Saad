@@ -1,9 +1,9 @@
 (() => {
   const body = document.body;
-  const header = document.querySelector('.site-header');
+  const header = document.querySelector('.news-header, .site-header');
   const menuButton = document.querySelector('.menu-toggle');
-  const nav = document.querySelector('.main-nav');
-  const navLinks = [...document.querySelectorAll('.main-nav a[href^="#"]')];
+  const nav = document.querySelector('.news-nav, .main-nav');
+  const navLinks = nav ? [...nav.querySelectorAll('a[href^="#"]')] : [];
 
   const closeMenu = () => {
     if (!menuButton || !nav) return;
@@ -28,7 +28,7 @@
   }
 
   if (header) {
-    const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 18);
+    const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 16);
     updateHeader();
     window.addEventListener('scroll', updateHeader, { passive: true });
   }
@@ -36,21 +36,19 @@
   const year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();
 
-  const revealItems = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window) {
-    const revealObserver = new IntersectionObserver(
-      (entries, observer) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('in-view');
-          observer.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.08, rootMargin: '0px 0px -18px 0px' }
-    );
-    revealItems.forEach((item) => revealObserver.observe(item));
-  } else {
-    revealItems.forEach((item) => item.classList.add('in-view'));
+  const today = document.getElementById('today');
+  if (today) {
+    try {
+      const formatted = new Intl.DateTimeFormat('ar-EG', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }).format(new Date());
+      today.textContent = `القاهرة · ${formatted}`;
+    } catch (_) {
+      today.textContent = 'القاهرة';
+    }
   }
 
   const sections = navLinks
@@ -64,11 +62,12 @@
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
         if (!current) return;
+
         navLinks.forEach((link) => {
           link.classList.toggle('active', link.getAttribute('href') === `#${current.target.id}`);
         });
       },
-      { rootMargin: '-36% 0px -54% 0px', threshold: [0, 0.15, 0.3] }
+      { rootMargin: '-35% 0px -55% 0px', threshold: [0, 0.12, 0.25] }
     );
     sections.forEach((section) => sectionObserver.observe(section));
   }
