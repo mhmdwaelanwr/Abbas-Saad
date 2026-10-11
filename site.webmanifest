@@ -1,0 +1,20 @@
+{
+  "name": "عباس سعد — ملف إعلامي",
+  "short_name": "عباس سعد",
+  "description": "الملف الإعلامي لعباس سعد، مقدم برنامج الوطن أولاً على قناة الحدث اليوم.",
+  "lang": "ar-EG",
+  "dir": "rtl",
+  "start_url": "/Abbas-Saad/",
+  "scope": "/Abbas-Saad/",
+  "display": "standalone",
+  "background_color": "#f4f1e9",
+  "theme_color": "#0f0f0f",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
