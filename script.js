@@ -46,7 +46,7 @@
           observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.08, rootMargin: '0px 0px -20px 0px' }
+      { threshold: 0.08, rootMargin: '0px 0px -18px 0px' }
     );
     revealItems.forEach((item) => revealObserver.observe(item));
   } else {
@@ -64,7 +64,6 @@
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
         if (!current) return;
-
         navLinks.forEach((link) => {
           link.classList.toggle('active', link.getAttribute('href') === `#${current.target.id}`);
         });
@@ -74,33 +73,34 @@
     sections.forEach((section) => sectionObserver.observe(section));
   }
 
-  document.querySelectorAll('[data-copy-target]').forEach((button) => {
+  const copyText = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (_) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+  };
+
+  document.querySelectorAll('[data-copy], [data-copy-target]').forEach((button) => {
     button.addEventListener('click', async () => {
-      const target = document.querySelector(button.dataset.copyTarget);
+      const selector = button.dataset.copy || button.dataset.copyTarget;
+      const target = selector ? document.querySelector(selector) : null;
       if (!target) return;
 
-      const text = target.textContent.trim();
       const original = button.textContent;
-
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch (_) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.setAttribute('readonly', '');
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-      }
-
-      button.textContent = 'تم النسخ';
+      await copyText(target.textContent.trim());
+      const english = /^copy$/i.test(original.trim()) || button.closest('[dir="ltr"]');
+      button.textContent = english ? 'Copied' : 'تم النسخ';
       button.setAttribute('aria-live', 'polite');
-      window.setTimeout(() => {
-        button.textContent = original;
-      }, 1600);
+      window.setTimeout(() => { button.textContent = original; }, 1600);
     });
   });
 
@@ -109,18 +109,12 @@
   });
 
   document.querySelectorAll('img[src*="i.ytimg.com"]').forEach((image) => {
-    image.addEventListener(
-      'error',
-      () => {
-        const match = image.src.match(/\/vi\/([^/]+)\//);
-        if (!match) return;
-        if (image.src.includes('/maxresdefault.jpg')) {
-          image.src = `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg`;
-        } else if (!image.src.includes('/mqdefault.jpg')) {
-          image.src = `https://i.ytimg.com/vi/${match[1]}/mqdefault.jpg`;
-        }
-      },
-      { once: true }
-    );
+    image.addEventListener('error', () => {
+      const match = image.src.match(/\/vi\/([^/]+)\//);
+      if (!match) return;
+      image.src = image.src.includes('/maxresdefault.jpg')
+        ? `https://i.ytimg.com/vi/${match[1]}/hqdefault.jpg`
+        : `https://i.ytimg.com/vi/${match[1]}/mqdefault.jpg`;
+    }, { once: true });
   });
 })();
